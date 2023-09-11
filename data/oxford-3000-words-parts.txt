@@ -460,7 +460,7 @@ campaign n.
 campaign v.
 camping n.
 campus n.
-can v.
+can modal-v.
 can n.
 cancel v.
 cancer n.
@@ -742,7 +742,7 @@ cost v.
 costume n.
 cottage n.
 cotton n.
-could v.
+could modal-v.
 council n.
 count v.
 count n.
@@ -1529,7 +1529,7 @@ hat n.
 hate v.
 hate n.
 have v.
-have to v.
+have to modal-v.
 he pron.
 head n.
 head v.
@@ -2022,7 +2022,7 @@ matter v.
 maximum adj.
 maximum n.
 May n.
-may v.
+may modal-v.
 maybe adv.
 me pron.
 meal n.
@@ -2057,7 +2057,7 @@ metre n.
 middle n.
 middle adj.
 midnight n.
-might v.
+might modal-v.
 mild adj.
 mile n.
 military adj.
@@ -2137,7 +2137,7 @@ music n.
 musical adj.
 musical n.
 musician n.
-must v.
+must modal-v.
 my det.
 myself pron.
 mysterious adj.
@@ -2167,6 +2167,7 @@ necessary adj.
 neck n.
 need v.
 need n.
+need modal-v.
 needle n.
 negative adj.
 negative n.
@@ -2314,7 +2315,7 @@ originally adv.
 other adj.
 other pron.
 otherwise adv.
-ought v.
+ought modal-v.
 our det.
 ours pron.
 ourselves pron.
@@ -2975,7 +2976,7 @@ shade n.
 shadow n.
 shake v.
 shake n.
-shall v.
+shall modal-v.
 shallow adj.
 shame n.
 shape n.
@@ -3008,7 +3009,7 @@ shop v.
 shopping n.
 short adj.
 shot n.
-should v.
+should modal-v.
 shoulder n.
 shout v.
 shout n.
@@ -3576,7 +3577,7 @@ us pron.
 use v.
 use n.
 used adj.
-used to v.
+used to modal-v.
 useful adj.
 user n.
 usual adj.
@@ -3712,7 +3713,7 @@ widely adv.
 wife n.
 wild adj.
 wildlife n.
-will v.
+will modal-v.
 will n.
 willing adj.
 win v.
@@ -3759,7 +3760,7 @@ worst adv.
 worst n.
 worth adj.
 worth n.
-would v.
+would modal-v.
 wound n.
 wound v.
 wow exclam.

@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as readline from "readline";
+import { Inflector } from "en-inflectors";
 
 const vowelPhonemes = new Set([
     "AH",
@@ -22,17 +23,23 @@ function isVowel(phoneme: string): boolean {
     return vowelPhonemes.has(phoneme);
 }
 
+function randomInt(lower: number, higher: number) {
+    return Math.floor(Math.random() * (higher - lower)) + lower;
+}
+
 let wordPhonemes: Map<string, Array<string>> = new Map();
 // Map of the rhyming portion of a word to the set of words that rhyme
 // e.g. { 'essed' => Set('blessed','stressed') }
 let rhymingWords: Map<string, Set<string>> = new Map();
 let commonWords: Set<string> = new Set();
 let partsOfSpeech: Map<string, string> = new Map();
+let wordsByPart: Map<string, Array<string>> = new Map();
 async function load() {
     commonWords = await loadCommonWords();
     wordPhonemes = await loadWordPhonemes(commonWords);
     rhymingWords = await findRhymedWords(wordPhonemes);
     partsOfSpeech = await loadPartsOfSpeech();
+    wordsByPart = splitByValue(partsOfSpeech);
 }
 
 async function loadCommonWords(): Promise<Set<string>> {
@@ -142,16 +149,44 @@ async function loadPartsOfSpeech(): Promise<Map<string, string>> {
     return partsOfSpeech;
 }
 
-async function main() {
-    await load();
-    let counts = new Array(100).fill(0);
-    for (const [rhymingPortion, words] of rhymingWords.entries()) {
-        if (words.size >= 2) {
-            counts[words.size]++;
-            // console.log(`${rhymingPortion} => ${[...words].join(" ")}`);
+function splitByValue(map: Map<string, string>): Map<string, Array<string>> {
+    const split: Map<string, Array<string>> = new Map();
+    for (const [key, value] of map.entries()) {
+        if (split.has(value)) {
+            split.get(value).push(key);
+        } else {
+            split.set(value, [key]);
         }
     }
-    console.log("Number of rhyming sets:", counts);
+    return split;
+}
+
+function getRandomWord(partOfSpeech: string): string {
+    const words = wordsByPart.get(partOfSpeech);
+    if (!words) {
+        return "";
+    }
+    return words[randomInt(0, words.length)];
+}
+
+function makePastTense(verb: string): string {
+    const inflector = new Inflector(verb);
+    return inflector.toPast();
+}
+
+function phrase(): string {
+    function capitalizeFirst(val: string): string {
+        return val[0].toUpperCase() + val.substring(1);
+    }
+    const word1 = capitalizeFirst(getRandomWord("adj."));
+    const word2 = capitalizeFirst(getRandomWord("n."));
+    const word3 = capitalizeFirst(makePastTense(getRandomWord("v.")));
+    const word4 = capitalizeFirst(getRandomWord("n."));
+    return word1 + word2 + word3 + word4;
+}
+
+async function main() {
+    await load();
     let partsCount = new Map();
     for (const [word, part] of partsOfSpeech.entries()) {
         if (partsCount.has(part)) {
@@ -161,6 +196,7 @@ async function main() {
         }
     }
     console.log("Count of each part of speech:", partsCount);
+    console.log(phrase());
 }
 
 main();
