@@ -27,17 +27,12 @@ function randomInt(lower: number, higher: number) {
     return Math.floor(Math.random() * (higher - lower)) + lower;
 }
 
-let wordPhonemes: Map<string, Array<string>> = new Map();
 // Map of the rhyming portion of a word to the set of words that rhyme
 // e.g. { 'essed' => Set('blessed','stressed') }
 let rhymingWords: Map<string, Set<string>> = new Map();
-let commonWords: Set<string> = new Set();
 let partsOfSpeech: Map<string, string> = new Map();
 let wordsByPart: Map<string, Array<string>> = new Map();
 async function load() {
-    commonWords = await loadCommonWords();
-    wordPhonemes = await loadWordPhonemes(commonWords);
-    rhymingWords = await findRhymedWords(wordPhonemes);
     partsOfSpeech = await loadPartsOfSpeech();
     wordsByPart = splitByValue(partsOfSpeech);
 }
@@ -45,7 +40,7 @@ async function load() {
 async function loadCommonWords(): Promise<Set<string>> {
     const commonWords: Set<string> = new Set();
     const commonWordsStream = fs.createReadStream(
-        "data/common-words.txt",
+        "src/data/common-words.txt",
         "utf-8"
     );
     const rl = readline.createInterface({
@@ -62,7 +57,10 @@ async function loadWordPhonemes(
     filter: Set<string>
 ): Promise<Map<string, Array<string>>> {
     const wordPhonemes: Map<string, Array<string>> = new Map();
-    const rhymeLineStream = fs.createReadStream("data/cmudict-0.7b", "utf-8");
+    const rhymeLineStream = fs.createReadStream(
+        "src/data/cmudict-0.7b",
+        "utf-8"
+    );
     const rl = readline.createInterface({
         input: rhymeLineStream,
         crlfDelay: Infinity,
@@ -129,7 +127,7 @@ function findPararhymes(
 async function loadPartsOfSpeech(): Promise<Map<string, string>> {
     const partsOfSpeech = new Map();
     const rhymeLineStream = fs.createReadStream(
-        "data/oxford-3000-words-parts.txt",
+        "src/data/oxford-3000-words-parts.txt",
         "utf-8"
     );
     const rl = readline.createInterface({
