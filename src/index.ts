@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as readline from "readline";
 import { Inflector } from "en-inflectors";
+import wordDict from "./data/oxford-3000-words-parts.json";
 
 const vowelPhonemes = new Set([
     "AH",
@@ -30,7 +31,7 @@ function randomInt(lower: number, higher: number) {
 // Map of the rhyming portion of a word to the set of words that rhyme
 // e.g. { 'essed' => Set('blessed','stressed') }
 let rhymingWords: Map<string, Set<string>> = new Map();
-let partsOfSpeech: Map<string, string> = new Map();
+let partsOfSpeech: Map<string, Set<string>> = new Map();
 let wordsByPart: Map<string, Array<string>> = new Map();
 async function load() {
     partsOfSpeech = await loadPartsOfSpeech();
@@ -124,36 +125,25 @@ function findPararhymes(
     return pararhymeMap;
 }
 
-async function loadPartsOfSpeech(): Promise<Map<string, string>> {
-    const partsOfSpeech = new Map();
-    const rhymeLineStream = fs.createReadStream(
-        "src/data/oxford-3000-words-parts.txt",
-        "utf-8"
-    );
-    const rl = readline.createInterface({
-        input: rhymeLineStream,
-        crlfDelay: Infinity,
-    });
-    for await (let line of rl) {
-        const split = line.lastIndexOf(" ");
-        if (split < 0) {
-            continue;
-        }
-        const word = line.substring(0, split);
-        const part = line.substring(split + 1);
-        // If a word is multiple parts of speech, just keep the latest one
-        partsOfSpeech.set(word, part);
+async function loadPartsOfSpeech(): Promise<Map<string, Set<string>>> {
+    const partsOfSpeech: Map<string, Set<string>> = new Map();
+    for (const [word, part] of Object.entries(wordDict)) {
+        partsOfSpeech.set(word, new Set(part));
     }
     return partsOfSpeech;
 }
 
-function splitByValue(map: Map<string, string>): Map<string, Array<string>> {
+function splitByValue(
+    map: Map<string, Set<string>>
+): Map<string, Array<string>> {
     const split: Map<string, Array<string>> = new Map();
     for (const [key, value] of map.entries()) {
-        if (split.has(value)) {
-            split.get(value).push(key);
-        } else {
-            split.set(value, [key]);
+        for (const val2 of value) {
+            if (split.has(val2)) {
+                split.get(val2).push(key);
+            } else {
+                split.set(val2, new Array(key));
+            }
         }
     }
     return split;
@@ -186,11 +176,13 @@ function phrase(): string {
 async function main() {
     await load();
     let partsCount = new Map();
-    for (const [word, part] of partsOfSpeech.entries()) {
-        if (partsCount.has(part)) {
-            partsCount.set(part, partsCount.get(part) + 1);
-        } else {
-            partsCount.set(part, 1);
+    for (const [word, parts] of partsOfSpeech.entries()) {
+        for (const part of parts) {
+            if (partsCount.has(part)) {
+                partsCount.set(part, partsCount.get(part) + 1);
+            } else {
+                partsCount.set(part, 1);
+            }
         }
     }
     console.log("Count of each part of speech:", partsCount);
