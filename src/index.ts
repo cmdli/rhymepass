@@ -12,6 +12,7 @@ export const ADVERB: PartOfSpeech = 4;
 export const CONJUNCTION: PartOfSpeech = 5;
 export const PRONOUN: PartOfSpeech = 6;
 export const EXCLAMATION: PartOfSpeech = 7;
+export const PAST_TENSE_VERB: PartOfSpeech = 8;
 const partOfSpeechToString: Map<PartOfSpeech, string> = new Map([
     [NOUN, "n."],
     [VERB, "v."],
@@ -195,8 +196,12 @@ export function getPassphrase(partTypes: PartOfSpeech[]): {
     let totalEntropy = 0.0;
     const parts = [];
     for (const partType of partTypes) {
-        let [part, entropy] = getRandomWord(partType);
-        if (partType === VERB) {
+        let partOfSpeech = partType;
+        if (partType === PAST_TENSE_VERB) {
+            partOfSpeech = VERB;
+        }
+        let [part, entropy] = getRandomWord(partOfSpeech);
+        if (partType === PAST_TENSE_VERB) {
             part = makePastTense(part);
         }
         part = capitalizeFirst(part);
@@ -220,7 +225,7 @@ async function main() {
         }
     }
     console.log("Count of each part of speech:", partsCount);
-    console.log(getPassphrase([ADJECTIVE, NOUN, VERB, NOUN]));
+    console.log(getPassphrase([ADJECTIVE, NOUN, PAST_TENSE_VERB, NOUN]));
 }
 
 main();
