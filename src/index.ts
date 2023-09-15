@@ -3,6 +3,29 @@ import * as readline from "readline";
 import { Inflector } from "en-inflectors";
 import wordDict from "./data/oxford-3000-words-parts.json";
 
+type PartOfSpeech = number;
+export const NOUN: PartOfSpeech = 0;
+export const VERB: PartOfSpeech = 1;
+export const ADJECTIVE: PartOfSpeech = 2;
+export const PREPOSITION: PartOfSpeech = 3;
+export const ADVERB: PartOfSpeech = 4;
+export const CONJUNCTION: PartOfSpeech = 5;
+export const PRONOUN: PartOfSpeech = 6;
+export const EXCLAMATION: PartOfSpeech = 7;
+const partOfSpeechToString: Map<PartOfSpeech, string> = new Map([
+    [NOUN, "n."],
+    [VERB, "v."],
+    [ADJECTIVE, "adj."],
+    [PREPOSITION, "prep."],
+    [ADVERB, "adv."],
+    [CONJUNCTION, "conj."],
+    [PRONOUN, "pron."],
+    [EXCLAMATION, "exclam."],
+]);
+const stringToPartOfSpeech: Map<string, PartOfSpeech> = new Map(
+    Array.from(partOfSpeechToString, (a) => [a[1], a[0]])
+);
+
 const vowelPhonemes = new Set([
     "AH",
     "AE",
@@ -28,30 +51,29 @@ function randomInt(lower: number, higher: number) {
     return Math.floor(Math.random() * (higher - lower)) + lower;
 }
 
+function capitalizeFirst(val: string): string {
+    if (val.length === 0) {
+        return val;
+    }
+    if (val.length === 1) {
+        return val.toUpperCase();
+    }
+    return val[0].toUpperCase() + val.substring(1);
+}
+
 // Map of the rhyming portion of a word to the set of words that rhyme
 // e.g. { 'essed' => Set('blessed','stressed') }
 let rhymingWords: Map<string, Set<string>> = new Map();
-let partsOfSpeech: Map<string, Set<string>> = new Map();
-let wordsByPart: Map<string, Array<string>> = new Map();
-async function load() {
-    partsOfSpeech = await loadPartsOfSpeech();
-    wordsByPart = splitByValue(partsOfSpeech);
-}
-
-async function loadCommonWords(): Promise<Set<string>> {
-    const commonWords: Set<string> = new Set();
-    const commonWordsStream = fs.createReadStream(
-        "src/data/common-words.txt",
-        "utf-8"
-    );
-    const rl = readline.createInterface({
-        input: commonWordsStream,
-        crlfDelay: Infinity,
-    });
-    for await (let line of rl) {
-        commonWords.add(line.toLowerCase());
+let partsOfSpeech: Map<string, Set<PartOfSpeech>> = new Map();
+let wordsByPart: Map<PartOfSpeech, Array<string>> = new Map();
+let loaded = false;
+function load() {
+    if (loaded) {
+        return;
     }
-    return commonWords;
+    partsOfSpeech = loadPartsOfSpeech();
+    wordsByPart = splitByValue(partsOfSpeech);
+    loaded = true;
 }
 
 async function loadWordPhonemes(
@@ -125,18 +147,21 @@ function findPararhymes(
     return pararhymeMap;
 }
 
-async function loadPartsOfSpeech(): Promise<Map<string, Set<string>>> {
-    const partsOfSpeech: Map<string, Set<string>> = new Map();
-    for (const [word, part] of Object.entries(wordDict)) {
-        partsOfSpeech.set(word, new Set(part));
+function loadPartsOfSpeech(): Map<string, Set<PartOfSpeech>> {
+    const partsOfSpeech: Map<string, Set<PartOfSpeech>> = new Map();
+    for (const [word, partStrings] of Object.entries(wordDict)) {
+        const parts = partStrings
+            .map((p) => stringToPartOfSpeech.get(p))
+            .filter((x) => x !== undefined);
+        partsOfSpeech.set(word, new Set(parts));
     }
     return partsOfSpeech;
 }
 
 function splitByValue(
-    map: Map<string, Set<string>>
-): Map<string, Array<string>> {
-    const split: Map<string, Array<string>> = new Map();
+    map: Map<string, Set<PartOfSpeech>>
+): Map<PartOfSpeech, Array<string>> {
+    const split: Map<PartOfSpeech, Array<string>> = new Map();
     for (const [key, value] of map.entries()) {
         for (const val2 of value) {
             if (split.has(val2)) {
@@ -149,12 +174,13 @@ function splitByValue(
     return split;
 }
 
-function getRandomWord(partOfSpeech: string): string {
+function getRandomWord(partOfSpeech: PartOfSpeech): [string, number] {
     const words = wordsByPart.get(partOfSpeech);
     if (!words) {
-        return "";
+        return ["", 0];
     }
-    return words[randomInt(0, words.length)];
+    const entropy = Math.log2(words.length);
+    return [words[randomInt(0, words.length)], entropy];
 }
 
 function makePastTense(verb: string): string {
@@ -162,19 +188,27 @@ function makePastTense(verb: string): string {
     return inflector.toPast();
 }
 
-function phrase(): string {
-    function capitalizeFirst(val: string): string {
-        return val[0].toUpperCase() + val.substring(1);
+export function getPassphrase(partTypes: PartOfSpeech[]): {
+    passphrase: string;
+    entropy: number;
+} {
+    let totalEntropy = 0.0;
+    const parts = [];
+    for (const partType of partTypes) {
+        let [part, entropy] = getRandomWord(partType);
+        if (partType === VERB) {
+            part = makePastTense(part);
+        }
+        part = capitalizeFirst(part);
+        parts.push(part);
+        totalEntropy += entropy;
     }
-    const word1 = capitalizeFirst(getRandomWord("adj."));
-    const word2 = capitalizeFirst(getRandomWord("n."));
-    const word3 = capitalizeFirst(makePastTense(getRandomWord("v.")));
-    const word4 = capitalizeFirst(getRandomWord("n."));
-    return word1 + word2 + word3 + word4;
+    const passphrase = parts.join("");
+    return { passphrase, entropy: totalEntropy };
 }
 
 async function main() {
-    await load();
+    load();
     let partsCount = new Map();
     for (const [word, parts] of partsOfSpeech.entries()) {
         for (const part of parts) {
@@ -186,7 +220,7 @@ async function main() {
         }
     }
     console.log("Count of each part of speech:", partsCount);
-    console.log(phrase());
+    console.log(getPassphrase([ADJECTIVE, NOUN, VERB, NOUN]));
 }
 
 main();
