@@ -2,30 +2,44 @@ import * as fs from "fs";
 import * as readline from "readline";
 import { Inflector } from "en-inflectors";
 import wordDict from "./data/oxford-3000-words-parts.json";
+import pronunciations from "./data/cmudict-common.json";
 
-type PartOfSpeech = number;
-export const NOUN: PartOfSpeech = 0;
-export const VERB: PartOfSpeech = 1;
-export const ADJECTIVE: PartOfSpeech = 2;
-export const PREPOSITION: PartOfSpeech = 3;
-export const ADVERB: PartOfSpeech = 4;
-export const CONJUNCTION: PartOfSpeech = 5;
-export const PRONOUN: PartOfSpeech = 6;
-export const EXCLAMATION: PartOfSpeech = 7;
-export const PAST_TENSE_VERB: PartOfSpeech = 8;
+export enum PartOfSpeech {
+    NOUN = 0,
+    VERB,
+    ADJECTIVE,
+    PREPOSITION,
+    ADVERB,
+    CONJUNCTION,
+    PRONOUN,
+    EXCLAMATION,
+}
 const partOfSpeechToString: Map<PartOfSpeech, string> = new Map([
-    [NOUN, "n."],
-    [VERB, "v."],
-    [ADJECTIVE, "adj."],
-    [PREPOSITION, "prep."],
-    [ADVERB, "adv."],
-    [CONJUNCTION, "conj."],
-    [PRONOUN, "pron."],
-    [EXCLAMATION, "exclam."],
+    [PartOfSpeech.NOUN, "n."],
+    [PartOfSpeech.VERB, "v."],
+    [PartOfSpeech.ADJECTIVE, "adj."],
+    [PartOfSpeech.PREPOSITION, "prep."],
+    [PartOfSpeech.ADVERB, "adv."],
+    [PartOfSpeech.CONJUNCTION, "conj."],
+    [PartOfSpeech.PRONOUN, "pron."],
+    [PartOfSpeech.EXCLAMATION, "exclam."],
 ]);
 const stringToPartOfSpeech: Map<string, PartOfSpeech> = new Map(
     Array.from(partOfSpeechToString, (a) => [a[1], a[0]])
 );
+
+function partTypeToPartOfSpeech(partType: PartType): PartOfSpeech {
+    if (partType === ComplexType.PAST_TENSE_VERB) {
+        return PartOfSpeech.VERB;
+    } else {
+        return partType as PartOfSpeech;
+    }
+}
+
+export enum ComplexType {
+    PAST_TENSE_VERB = "PAST_TENSE_VERB",
+}
+export type PartType = PartOfSpeech | ComplexType;
 
 const vowelPhonemes = new Set([
     "AH",
@@ -62,9 +76,22 @@ function capitalizeFirst(val: string): string {
     return val[0].toUpperCase() + val.substring(1);
 }
 
+function getRhymeEnding(phonemes: string[]): string {
+    for (let i = 0; i < phonemes.length; i++) {
+        // The phoneme that ends in 1 is the stressed syllable
+        if (phonemes[i].endsWith("1")) {
+            // Two words rhyme if they share the same phonemes after the stressed syllable
+            return phonemes.slice(i).join(" ");
+        }
+    }
+    return "";
+}
+
+let wordPhonemes: Map<string, Array<string>> = new Map();
 // Map of the rhyming portion of a word to the set of words that rhyme
 // e.g. { 'essed' => Set('blessed','stressed') }
 let rhymingWords: Map<string, Set<string>> = new Map();
+let pararhymes: Map<string, Array<string>> = new Map();
 let partsOfSpeech: Map<string, Set<PartOfSpeech>> = new Map();
 let wordsByPart: Map<PartOfSpeech, Array<string>> = new Map();
 let loaded = false;
@@ -74,61 +101,34 @@ function load() {
     }
     partsOfSpeech = loadPartsOfSpeech();
     wordsByPart = splitByValue(partsOfSpeech);
+    wordPhonemes = loadWordPhonemes();
+    rhymingWords = findRhymedWords(wordPhonemes);
+    pararhymes = findPararhymes(wordPhonemes);
     loaded = true;
 }
 
-async function loadWordPhonemes(
-    filter: Set<string>
-): Promise<Map<string, Array<string>>> {
+function loadWordPhonemes(): Map<string, Array<string>> {
     const wordPhonemes: Map<string, Array<string>> = new Map();
-    const rhymeLineStream = fs.createReadStream(
-        "src/data/cmudict-0.7b",
-        "utf-8"
-    );
-    const rl = readline.createInterface({
-        input: rhymeLineStream,
-        crlfDelay: Infinity,
-    });
-    for await (let line of rl) {
-        line = line.trim();
-        if (line.startsWith(";;;")) {
-            continue;
-        }
-        const args = line.split(" ").filter((val) => val.length != 0);
-        if (args.length < 2) {
-            continue;
-        }
-        const word = args.shift().toLowerCase();
-        const phonemes = args; // After removing first element, rest are phonemes
-        if (!filter.has(word)) {
-            continue;
-        }
+    for (const [word, phonemes] of Object.entries(pronunciations)) {
         wordPhonemes.set(word, phonemes);
     }
     return wordPhonemes;
 }
 
-async function findRhymedWords(
+function findRhymedWords(
     wordPhonemes: Map<string, Array<string>>
-): Promise<Map<string, Set<string>>> {
-    const rhymedWords: Map<string, Set<string>> = new Map();
+): Map<string, Set<string>> {
+    const rhymingWords: Map<string, Set<string>> = new Map();
     for (const [word, phonemes] of wordPhonemes.entries()) {
-        for (let i = 0; i < phonemes.length; i++) {
-            // The phoneme that ends in 1 is the stressed syllable
-            if (phonemes[i].endsWith("1")) {
-                // Two words rhyme if they share the same phonemes after the stressed syllable
-                const rhymingPortion = phonemes.slice(i).join(" ");
-                const rhymedWords = rhymingWords.get(rhymingPortion);
-                if (!rhymedWords) {
-                    rhymingWords.set(rhymingPortion, new Set([word]));
-                } else {
-                    rhymedWords.add(word);
-                }
-                break;
-            }
+        const rhymingPortion = getRhymeEnding(phonemes);
+        const rhymedWords = rhymingWords.get(rhymingPortion);
+        if (!rhymedWords) {
+            rhymingWords.set(rhymingPortion, new Set([word]));
+        } else {
+            rhymedWords.add(word);
         }
     }
-    return rhymedWords;
+    return rhymingWords;
 }
 
 function findPararhymes(
@@ -175,6 +175,17 @@ function splitByValue(
     return split;
 }
 
+function getRhymes(word: string): Set<string> {
+    const phonemes = wordPhonemes.get(word);
+    const rhymedWords = rhymingWords.get(getRhymeEnding(phonemes));
+    if (!rhymedWords) {
+        return new Set();
+    }
+    const output = new Set<string>(rhymedWords);
+    output.delete(word);
+    return output;
+}
+
 function getRandomWord(partOfSpeech: PartOfSpeech): [string, number] {
     const words = wordsByPart.get(partOfSpeech);
     if (!words) {
@@ -189,27 +200,82 @@ function makePastTense(verb: string): string {
     return inflector.toPast();
 }
 
-export function getPassphrase(partTypes: PartOfSpeech[]): {
-    passphrase: string;
+function getRhymingWords(partTypes: PartOfSpeech[]): {
+    parts: string[] | null;
     entropy: number;
 } {
-    let totalEntropy = 0.0;
-    const parts = [];
-    for (const partType of partTypes) {
-        let partOfSpeech = partType;
-        if (partType === PAST_TENSE_VERB) {
-            partOfSpeech = VERB;
+    // NOTE: This calculation of entropy is incorrect, as it
+    // doesn't account for differing amounts of entropy for
+    // different words. Some words will have more rhymes and
+    // some will have less. However, it is an okay estimate.
+    let parts = [];
+    let entropy = 0;
+    const possibleFirstWords = wordsByPart.get(partTypes[0]);
+    entropy += Math.log2(possibleFirstWords.length);
+    parts.push(possibleFirstWords[randomInt(0, possibleFirstWords.length)]);
+    const rhymes = getRhymes(parts[0]);
+    for (let i = 1; i < partTypes.length; i++) {
+        if (!rhymes || rhymes.size === 0) {
+            return { parts: null, entropy: 0 };
         }
-        let [part, entropy] = getRandomWord(partOfSpeech);
-        if (partType === PAST_TENSE_VERB) {
-            part = makePastTense(part);
-        }
-        part = capitalizeFirst(part);
-        parts.push(part);
-        totalEntropy += entropy;
+        const matchingWords = Array.from(rhymes).filter((word) =>
+            partsOfSpeech.get(word).has(partTypes[i])
+        );
+        entropy += Math.log2(matchingWords.length);
+        const nextWord = matchingWords[randomInt(0, matchingWords.length)];
+        rhymes.delete(nextWord);
+        parts.push(nextWord);
     }
-    const passphrase = parts.join("");
-    return { passphrase, entropy: totalEntropy };
+    return { parts, entropy };
+}
+
+export function getPassphrase(
+    parts: PartType[],
+    rhyme?: number[],
+    minimumEntropy?: number
+): {
+    passphrase: string | null;
+    entropy: number;
+} {
+    if (minimumEntropy === undefined) {
+        minimumEntropy = 30.0; // Minimum 30 bits of entropy
+    }
+    let totalEntropy = 0.0;
+    const partStrings = new Array<string | null>(parts.length).fill(null);
+    for (let i = 0; i < parts.length; i++) {
+        if (partStrings[i] !== null) {
+            continue;
+        }
+        let partIndexes = [i]; // Part indexes to update
+        if (rhyme !== undefined) {
+            partIndexes = rhyme
+                .map((val, j) => (val === rhyme[i] ? j : null))
+                .filter((x) => x !== null);
+        }
+        let partsOfSpeech = partIndexes.map((i) =>
+            partTypeToPartOfSpeech(parts[i])
+        );
+        let result = getRhymingWords(partsOfSpeech);
+        if (result.parts === null) {
+            return { passphrase: null, entropy: 0 };
+        }
+        for (let j = 0; j < partIndexes.length; j++) {
+            let partI = partIndexes[j];
+            let partString = result.parts[j];
+            if (parts[partI] === ComplexType.PAST_TENSE_VERB) {
+                partString = makePastTense(partString);
+            }
+            partString = capitalizeFirst(partString);
+            partStrings[partI] = partString;
+        }
+        totalEntropy += result.entropy;
+    }
+    const passphrase = partStrings.join("");
+    if (totalEntropy > minimumEntropy) {
+        return { passphrase, entropy: totalEntropy };
+    } else {
+        return { passphrase: null, entropy: 0 };
+    }
 }
 
 async function main() {
@@ -225,7 +291,17 @@ async function main() {
         }
     }
     console.log("Count of each part of speech:", partsCount);
-    console.log(getPassphrase([ADJECTIVE, NOUN, PAST_TENSE_VERB, NOUN]));
+    console.log(
+        getPassphrase(
+            [
+                PartOfSpeech.ADJECTIVE,
+                PartOfSpeech.NOUN,
+                ComplexType.PAST_TENSE_VERB,
+                PartOfSpeech.NOUN,
+            ],
+            [1, 2, 3, 2]
+        )
+    );
 }
 
 main();
