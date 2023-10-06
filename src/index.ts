@@ -66,6 +66,10 @@ function randomInt(lower: number, higher: number) {
     return Math.floor(Math.random() * (higher - lower)) + lower;
 }
 
+function randomChoice<T>(arr: T[]): T {
+    return arr[randomInt(0, arr.length - 1)];
+}
+
 function capitalizeFirst(val: string): string {
     if (val.length === 0) {
         return val;
@@ -85,6 +89,29 @@ function getRhymeEnding(phonemes: string[]): string {
         }
     }
     return "";
+}
+
+function splitByValue<T, K>(map: Map<T, Set<K>>): Map<K, Array<T>> {
+    const split: Map<K, Array<T>> = new Map();
+    for (const [key, value] of map.entries()) {
+        for (const val2 of value) {
+            if (split.has(val2)) {
+                split.get(val2).push(key);
+            } else {
+                split.set(val2, new Array(key));
+            }
+        }
+    }
+    return split;
+}
+
+function shuffle<T>(arr: Array<T>) {
+    for (let i = 0; i < arr.length - 1; i++) {
+        const j = Math.floor(Math.random() * (arr.length - (i + 1))) + i + 1;
+        const s = arr[i];
+        arr[i] = arr[j];
+        arr[j] = s;
+    }
 }
 
 let wordPhonemes: Map<string, Array<string>> = new Map();
@@ -159,24 +186,11 @@ function loadPartsOfSpeech(): Map<string, Set<PartOfSpeech>> {
     return partsOfSpeech;
 }
 
-function splitByValue(
-    map: Map<string, Set<PartOfSpeech>>
-): Map<PartOfSpeech, Array<string>> {
-    const split: Map<PartOfSpeech, Array<string>> = new Map();
-    for (const [key, value] of map.entries()) {
-        for (const val2 of value) {
-            if (split.has(val2)) {
-                split.get(val2).push(key);
-            } else {
-                split.set(val2, new Array(key));
-            }
-        }
-    }
-    return split;
-}
-
 function getRhymes(word: string): Set<string> {
     const phonemes = wordPhonemes.get(word);
+    if (!wordPhonemes) {
+        return new Set();
+    }
     const rhymedWords = rhymingWords.get(getRhymeEnding(phonemes));
     if (!rhymedWords) {
         return new Set();
@@ -186,13 +200,8 @@ function getRhymes(word: string): Set<string> {
     return output;
 }
 
-function getRandomWord(partOfSpeech: PartOfSpeech): [string, number] {
-    const words = wordsByPart.get(partOfSpeech);
-    if (!words) {
-        return ["", 0];
-    }
-    const entropy = Math.log2(words.length);
-    return [words[randomInt(0, words.length)], entropy];
+function isPartOfSpeech(word: string, part: PartOfSpeech): boolean {
+    return partsOfSpeech.get(word).has(part);
 }
 
 function makePastTense(verb: string): string {
@@ -204,6 +213,9 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
     parts: string[] | null;
     entropy: number;
 } {
+    if (partTypes.length === 0) {
+        return { parts: [], entropy: 0 };
+    }
     // NOTE: This calculation of entropy is incorrect, as it
     // doesn't account for differing amounts of entropy for
     // different words. Some words will have more rhymes and
@@ -211,20 +223,32 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
     let parts = [];
     let entropy = 0;
     const possibleFirstWords = wordsByPart.get(partTypes[0]);
-    entropy += Math.log2(possibleFirstWords.length);
-    parts.push(possibleFirstWords[randomInt(0, possibleFirstWords.length)]);
-    const rhymes = getRhymes(parts[0]);
-    for (let i = 1; i < partTypes.length; i++) {
-        if (!rhymes || rhymes.size === 0) {
-            return { parts: null, entropy: 0 };
+    const randomIndexes = [...new Array(possibleFirstWords.length).keys()];
+    shuffle(randomIndexes);
+    // Try random words until you run out of choices
+    for (const randomI of randomIndexes) {
+        let part = possibleFirstWords[randomI];
+        const rhymes = getRhymes(part);
+        let rhymeEntropy = 0;
+        let rhymeWords = [];
+        for (let i = 1; i < partTypes.length; i++) {
+            if (!rhymes || rhymes.size === 0) {
+                rhymeWords = null;
+                break;
+            }
+            const matchingWords = [...rhymes].filter((word) =>
+                isPartOfSpeech(word, partTypes[i])
+            );
+            rhymeEntropy += Math.log2(matchingWords.length);
+            const nextWord = randomChoice(matchingWords);
+            rhymes.delete(nextWord);
+            rhymeWords.push(nextWord);
         }
-        const matchingWords = Array.from(rhymes).filter((word) =>
-            partsOfSpeech.get(word).has(partTypes[i])
-        );
-        entropy += Math.log2(matchingWords.length);
-        const nextWord = matchingWords[randomInt(0, matchingWords.length)];
-        rhymes.delete(nextWord);
-        parts.push(nextWord);
+        if (rhymeWords !== null) {
+            parts = [part, ...rhymeWords];
+            entropy = Math.log2(possibleFirstWords.length) + rhymeEntropy;
+            break;
+        }
     }
     return { parts, entropy };
 }
@@ -238,20 +262,22 @@ export function getPassphrase(
     entropy: number;
 } {
     if (minimumEntropy === undefined) {
-        minimumEntropy = 30.0; // Minimum 30 bits of entropy
+        minimumEntropy = 30.0; // Default 30 bits of minimum entropy
     }
+    if (rhyme === undefined) {
+        // If no rhyme, each word only needs to rhyme with itself
+        rhyme = [...parts.keys()];
+    }
+
     let totalEntropy = 0.0;
     const partStrings = new Array<string | null>(parts.length).fill(null);
     for (let i = 0; i < parts.length; i++) {
         if (partStrings[i] !== null) {
             continue;
         }
-        let partIndexes = [i]; // Part indexes to update
-        if (rhyme !== undefined) {
-            partIndexes = rhyme
-                .map((val, j) => (val === rhyme[i] ? j : null))
-                .filter((x) => x !== null);
-        }
+        let partIndexes = rhyme
+            .map((val, j) => (val === rhyme[i] ? j : null))
+            .filter((x) => x !== null);
         let partsOfSpeech = partIndexes.map((i) =>
             partTypeToPartOfSpeech(parts[i])
         );
@@ -299,7 +325,7 @@ async function main() {
                 ComplexType.PAST_TENSE_VERB,
                 PartOfSpeech.NOUN,
             ],
-            [1, 2, 3, 2]
+            [1, 2, 3, 4]
         )
     );
 }
