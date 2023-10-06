@@ -210,18 +210,18 @@ function makePastTense(verb: string): string {
 }
 
 function getRhymingWords(partTypes: PartOfSpeech[]): {
-    parts: string[] | null;
-    entropy: number;
+    rhymeGroup: string[] | null;
+    rhymeEntropy: number;
 } {
     if (partTypes.length === 0) {
-        return { parts: [], entropy: 0 };
+        return { rhymeGroup: [], rhymeEntropy: 0 };
     }
     // NOTE: This calculation of entropy is incorrect, as it
     // doesn't account for differing amounts of entropy for
     // different words. Some words will have more rhymes and
     // some will have less. However, it is an okay estimate.
-    let parts = [];
-    let entropy = 0;
+    let rhymeGroup = [];
+    let rhymeEntropy = 0;
     const possibleFirstWords = wordsByPart.get(partTypes[0]);
     const randomIndexes = [...new Array(possibleFirstWords.length).keys()];
     shuffle(randomIndexes);
@@ -229,7 +229,7 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
     for (const randomI of randomIndexes) {
         let part = possibleFirstWords[randomI];
         const rhymes = getRhymes(part);
-        let rhymeEntropy = 0;
+        let partialEntropy = 0;
         let rhymeWords = [];
         for (let i = 1; i < partTypes.length; i++) {
             if (!rhymes || rhymes.size === 0) {
@@ -239,18 +239,18 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
             const matchingWords = [...rhymes].filter((word) =>
                 isPartOfSpeech(word, partTypes[i])
             );
-            rhymeEntropy += Math.log2(matchingWords.length);
+            partialEntropy += Math.log2(matchingWords.length);
             const nextWord = randomChoice(matchingWords);
             rhymes.delete(nextWord);
             rhymeWords.push(nextWord);
         }
         if (rhymeWords !== null) {
-            parts = [part, ...rhymeWords];
-            entropy = Math.log2(possibleFirstWords.length) + rhymeEntropy;
+            rhymeGroup = [part, ...rhymeWords];
+            rhymeEntropy = Math.log2(possibleFirstWords.length) + rhymeEntropy;
             break;
         }
     }
-    return { parts, entropy };
+    return { rhymeGroup, rhymeEntropy };
 }
 
 export function getPassphrase(
@@ -281,20 +281,20 @@ export function getPassphrase(
         let partsOfSpeech = partIndexes.map((i) =>
             partTypeToPartOfSpeech(parts[i])
         );
-        let result = getRhymingWords(partsOfSpeech);
-        if (result.parts === null) {
+        let { rhymeGroup, rhymeEntropy } = getRhymingWords(partsOfSpeech);
+        if (rhymeGroup === null) {
             return { passphrase: null, entropy: 0 };
         }
         for (let j = 0; j < partIndexes.length; j++) {
             let partI = partIndexes[j];
-            let partString = result.parts[j];
+            let partString = rhymeGroup[j];
             if (parts[partI] === ComplexType.PAST_TENSE_VERB) {
                 partString = makePastTense(partString);
             }
             partString = capitalizeFirst(partString);
             partStrings[partI] = partString;
         }
-        totalEntropy += result.entropy;
+        totalEntropy += rhymeEntropy;
     }
     const passphrase = partStrings.join("");
     if (totalEntropy > minimumEntropy) {
