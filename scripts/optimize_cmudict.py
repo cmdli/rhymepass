@@ -2,10 +2,10 @@
 import json
 
 print("Starting compilation of cmudict...")
-oxford_3000 = open("src/data/oxford-3000.txt").readlines()
+oxford_3000 = open("src/data/oxford-3000-words-parts.txt").readlines()
 words = set()
 for line in oxford_3000:
-    words.add(line.split(" ")[0])
+    words.add(line.split(" ")[0].lower())
 print("Common words loaded...")
 
 cmudict = open("src/data/cmudict-0.7b").read()
@@ -15,7 +15,7 @@ for line in lines:
     line = line.strip()
     if line.startswith(";;;"):
         continue
-    parts = line.split()
+    parts = [x for x in line.split(" ") if x != ""]
     if len(parts) < 2:
         continue
     word = parts[0].lower()

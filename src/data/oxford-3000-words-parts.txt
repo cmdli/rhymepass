@@ -123,7 +123,7 @@ ambitious adj.
 among prep.
 amount n.
 amount v.
-analyse v.
+analyze v.
 analysis n.
 ancient adj.
 and conj.
@@ -1770,7 +1770,7 @@ jam n.
 January n.
 jazz n.
 jeans n.
-jewellery n.
+jewelry n.
 job n.
 join v.
 joke n.
@@ -2016,7 +2016,6 @@ matching adj.
 material n.
 material adj.
 mathematics n.
-maths n.
 matter n.
 matter v.
 maximum adj.
@@ -2245,13 +2244,12 @@ occasion n.
 occasionally adv.
 occur v.
 ocean n.
-o’clock adv.
 October n.
 odd adj.
 of prep.
 off adv.
 off prep.
-offence n.
+offense n.
 offend v.
 offensive adj.
 offer v.
@@ -3082,7 +3080,6 @@ slow v.
 slowly adv.
 small adj.
 smart adj.
-smartphone n.
 smell v.
 smell n.
 smile v.

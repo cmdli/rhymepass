@@ -239,6 +239,10 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
             const matchingWords = [...rhymes].filter((word) =>
                 isPartOfSpeech(word, partTypes[i])
             );
+            if (matchingWords.length === 0) {
+                rhymeWords = null;
+                break;
+            }
             partialEntropy += Math.log2(matchingWords.length);
             const nextWord = randomChoice(matchingWords);
             rhymes.delete(nextWord);
@@ -247,6 +251,7 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
         if (rhymeWords !== null) {
             rhymeGroup = [part, ...rhymeWords];
             rhymeEntropy = Math.log2(possibleFirstWords.length) + rhymeEntropy;
+            console.log(rhymeGroup);
             break;
         }
     }
@@ -262,7 +267,7 @@ export function getPassphrase(
     entropy: number;
 } {
     if (minimumEntropy === undefined) {
-        minimumEntropy = 30.0; // Default 30 bits of minimum entropy
+        minimumEntropy = 20.0;
     }
     if (rhyme === undefined) {
         // If no rhyme, each word only needs to rhyme with itself
@@ -316,6 +321,14 @@ async function main() {
             }
         }
     }
+    for (const words of wordsByPart.values()) {
+        for (const word of words) {
+            const phonemes = wordPhonemes.get(word);
+            if (!phonemes) {
+                console.log("No phonemes for:", word);
+            }
+        }
+    }
     console.log("Count of each part of speech:", partsCount);
     console.log(
         getPassphrase(
@@ -325,7 +338,7 @@ async function main() {
                 ComplexType.PAST_TENSE_VERB,
                 PartOfSpeech.NOUN,
             ],
-            [1, 2, 3, 4]
+            [1, 2, 3, 2]
         )
     );
 }

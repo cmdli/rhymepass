@@ -99,7 +99,7 @@ ambition n. B1
 ambitious adj. B1
 among prep. A2
 amount n. A2, v. B2
-analyse v. B1
+analyze v. B1
 analysis n. B1
 ancient adj. A2
 and conj. A1
@@ -1425,7 +1425,7 @@ jam n. A2
 January n. A1
 jazz n. A2
 jeans n. A1
-jewellery n. A2
+jewelry n. A2
 job n. A1
 join v. A1
 joke n., v. A2
@@ -1606,7 +1606,6 @@ match (contest/correspond) n., v. A1
 matching adj. B2
 material n. A2, adj. B2
 mathematics n. A2
-maths n. A2
 matter n., v. A2
 maximum adj., n. B2
 May n. A1
@@ -1784,12 +1783,11 @@ occasion n. B1
 occasionally adv. B2
 occur v. B1
 ocean n. A2
-o’clock adv. A1
 October n. A1
 odd adj. B1
 of prep. A1
 off adv., prep. A1
-offence n. B2
+offense n. B2
 offend v. B2
 offensive adj. B2
 offer v., n. A2
@@ -2163,7 +2161,7 @@ reduction n. B2
 refer v. A2
 reference n. B1
 reflect v. B1
-refuse1 v. A2
+refuse v. A2
 regard v., n. B2
 region n. A2
 regional adj. B2
@@ -2451,7 +2449,6 @@ slow adj. A1, v. B1
 slowly adv. A2
 small adj. A1
 smart adj. B1
-smartphone n. A2
 smell v., n. A2
 smile v., n. A2
 smoke n., v. A2
