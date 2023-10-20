@@ -342,5 +342,3 @@ async function main() {
         )
     );
 }
-
-main();
