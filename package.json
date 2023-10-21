@@ -2,7 +2,7 @@
     "name": "rhymepass",
     "version": "1.0.0",
     "description": "Generate easy to remember phrases for passphrases",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
         "run": "node dist/index.js"
@@ -11,12 +11,13 @@
         "url": "https://github.com/cmdli/rhymepass",
         "type": "git"
     },
-    "author": "Chris de la Iglesia",
-    "license": "MIT License",
+    "author": "Chris de la Iglesia <chris@cmdli.dev> (https://github.com/cmdli)",
+    "license": "MIT",
     "keywords": [
-        "Password",
-        "Passphrase",
-        "Rhyme"
+        "password",
+        "passphrase",
+        "rhyme",
+        "rhymepass"
     ],
     "devDependencies": {
         "typescript": "^5.2.2"
