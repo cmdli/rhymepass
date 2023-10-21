@@ -273,6 +273,7 @@ export function getPassphrase(
         // If no rhyme, each word only needs to rhyme with itself
         rhyme = [...parts.keys()];
     }
+    load();
 
     let totalEntropy = 0.0;
     const partStrings = new Array<string | null>(parts.length).fill(null);

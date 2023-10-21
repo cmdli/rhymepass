@@ -1,6 +1,6 @@
 ### Task List
 
--   [ ] Turn into an actual package
+-   [x] Turn into an actual package
 -   [ ] Add tests
 -   [ ] Build demo site
 -   [ ] Fill out README
