@@ -238,7 +238,6 @@ function getRhymingWords(partTypes) {
         if (rhymeWords !== null) {
             rhymeGroup = [part, ...rhymeWords];
             rhymeEntropy = Math.log2(possibleFirstWords.length) + rhymeEntropy;
-            console.log(rhymeGroup);
             break;
         }
     }
@@ -252,6 +251,7 @@ function getPassphrase(parts, rhyme, minimumEntropy) {
         // If no rhyme, each word only needs to rhyme with itself
         rhyme = [...parts.keys()];
     }
+    load();
     let totalEntropy = 0.0;
     const partStrings = new Array(parts.length).fill(null);
     for (let i = 0; i < parts.length; i++) {
@@ -288,33 +288,31 @@ function getPassphrase(parts, rhyme, minimumEntropy) {
 exports.getPassphrase = getPassphrase;
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        load();
-        let partsCount = new Map();
-        for (const [word, parts] of partsOfSpeech.entries()) {
-            for (const part of parts) {
-                if (partsCount.has(part)) {
-                    partsCount.set(part, partsCount.get(part) + 1);
-                }
-                else {
-                    partsCount.set(part, 1);
-                }
-            }
-        }
-        for (const words of wordsByPart.values()) {
-            for (const word of words) {
-                const phonemes = wordPhonemes.get(word);
-                if (!phonemes) {
-                    console.log("No phonemes for:", word);
-                }
-            }
-        }
-        console.log("Count of each part of speech:", partsCount);
+        // let partsCount = new Map();
+        // for (const [word, parts] of partsOfSpeech.entries()) {
+        //     for (const part of parts) {
+        //         if (partsCount.has(part)) {
+        //             partsCount.set(part, partsCount.get(part) + 1);
+        //         } else {
+        //             partsCount.set(part, 1);
+        //         }
+        //     }
+        // }
+        // for (const words of wordsByPart.values()) {
+        //     for (const word of words) {
+        //         const phonemes = wordPhonemes.get(word);
+        //         if (!phonemes) {
+        //             console.log("No phonemes for:", word);
+        //         }
+        //     }
+        // }
+        // console.log("Count of each part of speech:", partsCount);
         console.log(getPassphrase([
-            PartOfSpeech.ADJECTIVE,
             PartOfSpeech.NOUN,
-            ComplexType.PAST_TENSE_VERB,
             PartOfSpeech.NOUN,
-        ], [1, 2, 3, 2]));
+            PartOfSpeech.NOUN,
+            PartOfSpeech.NOUN,
+        ]));
     });
 }
 //# sourceMappingURL=index.js.map

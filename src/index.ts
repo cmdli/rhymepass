@@ -251,7 +251,6 @@ function getRhymingWords(partTypes: PartOfSpeech[]): {
         if (rhymeWords !== null) {
             rhymeGroup = [part, ...rhymeWords];
             rhymeEntropy = Math.log2(possibleFirstWords.length) + rhymeEntropy;
-            console.log(rhymeGroup);
             break;
         }
     }
@@ -311,35 +310,31 @@ export function getPassphrase(
 }
 
 async function main() {
-    load();
-    let partsCount = new Map();
-    for (const [word, parts] of partsOfSpeech.entries()) {
-        for (const part of parts) {
-            if (partsCount.has(part)) {
-                partsCount.set(part, partsCount.get(part) + 1);
-            } else {
-                partsCount.set(part, 1);
-            }
-        }
-    }
-    for (const words of wordsByPart.values()) {
-        for (const word of words) {
-            const phonemes = wordPhonemes.get(word);
-            if (!phonemes) {
-                console.log("No phonemes for:", word);
-            }
-        }
-    }
-    console.log("Count of each part of speech:", partsCount);
+    // let partsCount = new Map();
+    // for (const [word, parts] of partsOfSpeech.entries()) {
+    //     for (const part of parts) {
+    //         if (partsCount.has(part)) {
+    //             partsCount.set(part, partsCount.get(part) + 1);
+    //         } else {
+    //             partsCount.set(part, 1);
+    //         }
+    //     }
+    // }
+    // for (const words of wordsByPart.values()) {
+    //     for (const word of words) {
+    //         const phonemes = wordPhonemes.get(word);
+    //         if (!phonemes) {
+    //             console.log("No phonemes for:", word);
+    //         }
+    //     }
+    // }
+    // console.log("Count of each part of speech:", partsCount);
     console.log(
-        getPassphrase(
-            [
-                PartOfSpeech.ADJECTIVE,
-                PartOfSpeech.NOUN,
-                ComplexType.PAST_TENSE_VERB,
-                PartOfSpeech.NOUN,
-            ],
-            [1, 2, 3, 2]
-        )
+        getPassphrase([
+            PartOfSpeech.NOUN,
+            PartOfSpeech.NOUN,
+            PartOfSpeech.NOUN,
+            PartOfSpeech.NOUN,
+        ])
     );
 }
