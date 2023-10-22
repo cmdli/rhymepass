@@ -1,7 +1,7 @@
 # Rhymepass
 
-[![Release](https://img.shields.io/github/release/cmdli/rhymepass.svg?label=Release)](https://github.com/cmdli/rhymepass/releases)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cmdli/rhymepass/blob/main/LICENSE)
+![Downloads](https://img.shields.io/npm/dm/rhymepass)
 
 ### Task List
 
