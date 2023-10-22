@@ -1,6 +1,6 @@
 # Rhymepass
 
-![Tests](https://github.com/cmdli/rhymepass/actions/workflows/test.yaml/badge.svg)
+![Tests](https://github.com/cmdli/rhymepass/actions/workflows/test.yml/badge.svg)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cmdli/rhymepass/blob/main/LICENSE)
 ![Downloads](https://img.shields.io/npm/dm/rhymepass)
 
