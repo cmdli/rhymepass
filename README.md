@@ -1,3 +1,7 @@
+# Rhymepass
+
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/cmdli/rhymepass/blob/master/LICENSE)
+
 ### Task List
 
 -   [x] Turn into an actual package
