@@ -308,11 +308,12 @@ function main() {
         // }
         // console.log("Count of each part of speech:", partsCount);
         console.log(getPassphrase([
+            PartOfSpeech.ADJECTIVE,
             PartOfSpeech.NOUN,
+            ComplexType.PAST_TENSE_VERB,
             PartOfSpeech.NOUN,
-            PartOfSpeech.NOUN,
-            PartOfSpeech.NOUN,
-        ]));
+        ], [1, 2, 3, 2]));
     });
 }
+main();
 //# sourceMappingURL=index.js.map
