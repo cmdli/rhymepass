@@ -1,5 +1,3 @@
-import * as fs from "fs";
-import * as readline from "readline";
 import { Inflector } from "en-inflectors";
 import wordDict from "./data/oxford-3000-words-parts.json";
 import pronunciations from "./data/cmudict-common.json";
@@ -62,11 +60,34 @@ function isVowel(phoneme: string): boolean {
     return vowelPhonemes.has(phoneme);
 }
 
+let cryptoLibObject = null;
+function cryptoLib(): any {
+    if (!!cryptoLibObject) {
+        return cryptoLibObject;
+    }
+    if (crypto) {
+        cryptoLibObject = crypto;
+    } else if (globalThis && globalThis.crypto) {
+        cryptoLibObject = globalThis.crypto;
+    } else {
+        let obj = require("node:crypto").webcrypto;
+        if (obj) {
+            cryptoLibObject = obj;
+        } else {
+            obj = require("crypto").webcrypto;
+            if (obj) {
+                cryptoLibObject = obj;
+            }
+        }
+    }
+    return cryptoLibObject;
+}
+
 const randomNums: Uint16Array = new Uint16Array(256);
 let randomI: number = randomNums.length;
 function random(): number {
     if (randomI >= randomNums.length) {
-        crypto.getRandomValues(randomNums);
+        cryptoLib().getRandomValues(randomNums);
         randomI = 0;
     }
     const num = randomNums[randomI];

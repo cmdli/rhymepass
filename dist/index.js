@@ -69,11 +69,36 @@ function isVowel(phoneme) {
     phoneme = phoneme.replace(/[0-9]/, "");
     return vowelPhonemes.has(phoneme);
 }
+let cryptoLibObject = null;
+function cryptoLib() {
+    if (!!cryptoLibObject) {
+        return cryptoLibObject;
+    }
+    if (crypto) {
+        cryptoLibObject = crypto;
+    }
+    else if (globalThis && globalThis.crypto) {
+        cryptoLibObject = globalThis.crypto;
+    }
+    else {
+        let obj = require("node:crypto").webcrypto;
+        if (obj) {
+            cryptoLibObject = obj;
+        }
+        else {
+            obj = require("crypto").webcrypto;
+            if (obj) {
+                cryptoLibObject = obj;
+            }
+        }
+    }
+    return cryptoLibObject;
+}
 const randomNums = new Uint16Array(256);
 let randomI = randomNums.length;
 function random() {
     if (randomI >= randomNums.length) {
-        crypto.getRandomValues(randomNums);
+        cryptoLib().getRandomValues(randomNums);
         randomI = 0;
     }
     const num = randomNums[randomI];
@@ -324,10 +349,6 @@ function main() {
             ComplexType.PAST_TENSE_VERB,
             PartOfSpeech.NOUN,
         ], [1, 2, 3, 2]));
-        for (let i = 0; i < 100; i++) {
-            console.log(random());
-        }
     });
 }
-main();
 //# sourceMappingURL=index.js.map
