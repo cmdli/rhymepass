@@ -309,7 +309,7 @@ export function getPassphrase(
 ): {
     passphrase: string | null;
     entropy: number;
-} {
+} | null {
     if (minimumEntropy === undefined) {
         minimumEntropy = 20.0;
     }
@@ -333,7 +333,7 @@ export function getPassphrase(
         );
         let { rhymeGroup, rhymeEntropy } = getRhymingWords(partsOfSpeech);
         if (rhymeGroup === null) {
-            return { passphrase: null, entropy: 0 };
+            return null;
         }
         for (let j = 0; j < partIndexes.length; j++) {
             let partI = partIndexes[j];
@@ -350,7 +350,7 @@ export function getPassphrase(
     if (totalEntropy > minimumEntropy) {
         return { passphrase, entropy: totalEntropy };
     } else {
-        return { passphrase: null, entropy: 0 };
+        return null;
     }
 }
 
