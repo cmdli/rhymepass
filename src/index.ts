@@ -73,9 +73,13 @@ function cryptoLib(): any {
     if (!!cryptoLibObject) {
         return cryptoLibObject;
     }
-    if (crypto !== undefined) {
+    if (typeof crypto !== "undefined" && !!crypto) {
         cryptoLibObject = crypto;
-    } else if (globalThis !== undefined && globalThis.crypto !== undefined) {
+    } else if (
+        typeof globalThis !== "undefined" &&
+        !!globalThis &&
+        globalThis.crypto !== undefined
+    ) {
         cryptoLibObject = globalThis.crypto;
     } else {
         let obj = tryRequire("node:crypto");
