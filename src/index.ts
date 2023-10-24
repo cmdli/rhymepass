@@ -62,8 +62,20 @@ function isVowel(phoneme: string): boolean {
     return vowelPhonemes.has(phoneme);
 }
 
+const randomNums: Uint16Array = new Uint16Array(256);
+let randomI: number = randomNums.length;
+function random(): number {
+    if (randomI >= randomNums.length) {
+        crypto.getRandomValues(randomNums);
+        randomI = 0;
+    }
+    const num = randomNums[randomI];
+    randomI++;
+    return num / 0xffff;
+}
+
 function randomInt(lower: number, higher: number) {
-    return Math.floor(Math.random() * (higher - lower)) + lower;
+    return Math.floor(random() * (higher - lower)) + lower;
 }
 
 function randomChoice<T>(arr: T[]): T {
@@ -107,7 +119,7 @@ function splitByValue<T, K>(map: Map<T, Set<K>>): Map<K, Array<T>> {
 
 function shuffle<T>(arr: Array<T>) {
     for (let i = 0; i < arr.length - 1; i++) {
-        const j = Math.floor(Math.random() * (arr.length - (i + 1))) + i + 1;
+        const j = randomInt(i + 1, arr.length);
         const s = arr[i];
         arr[i] = arr[j];
         arr[j] = s;

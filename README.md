@@ -25,3 +25,5 @@ const { passphrase, entropy } = getPassphrase(
 console.log(passphrase, entropy);
 // Output: HelpfulLayerFilmedPlayer 29.809370522853857
 ```
+
+`getPassphrase` returns a random passphrase matching the provided requirements. If there is no passphrase matching those requirements with the minimum entropy (default 20 bits), then it returns `null`.

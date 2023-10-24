@@ -69,8 +69,19 @@ function isVowel(phoneme) {
     phoneme = phoneme.replace(/[0-9]/, "");
     return vowelPhonemes.has(phoneme);
 }
+const randomNums = new Uint16Array(256);
+let randomI = randomNums.length;
+function random() {
+    if (randomI >= randomNums.length) {
+        crypto.getRandomValues(randomNums);
+        randomI = 0;
+    }
+    const num = randomNums[randomI];
+    randomI++;
+    return num / 0xffff;
+}
 function randomInt(lower, higher) {
-    return Math.floor(Math.random() * (higher - lower)) + lower;
+    return Math.floor(random() * (higher - lower)) + lower;
 }
 function randomChoice(arr) {
     return arr[randomInt(0, arr.length - 1)];
@@ -110,7 +121,7 @@ function splitByValue(map) {
 }
 function shuffle(arr) {
     for (let i = 0; i < arr.length - 1; i++) {
-        const j = Math.floor(Math.random() * (arr.length - (i + 1))) + i + 1;
+        const j = randomInt(i + 1, arr.length);
         const s = arr[i];
         arr[i] = arr[j];
         arr[j] = s;
@@ -313,6 +324,9 @@ function main() {
             ComplexType.PAST_TENSE_VERB,
             PartOfSpeech.NOUN,
         ], [1, 2, 3, 2]));
+        for (let i = 0; i < 100; i++) {
+            console.log(random());
+        }
     });
 }
 main();
