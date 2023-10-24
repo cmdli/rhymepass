@@ -60,23 +60,31 @@ function isVowel(phoneme: string): boolean {
     return vowelPhonemes.has(phoneme);
 }
 
+function tryRequire(path: string): any {
+    let module = undefined;
+    try {
+        module = require(path);
+    } catch (e) {}
+    return module;
+}
+
 let cryptoLibObject = null;
 function cryptoLib(): any {
     if (!!cryptoLibObject) {
         return cryptoLibObject;
     }
-    if (crypto) {
+    if (crypto !== undefined) {
         cryptoLibObject = crypto;
-    } else if (globalThis && globalThis.crypto) {
+    } else if (globalThis !== undefined && globalThis.crypto !== undefined) {
         cryptoLibObject = globalThis.crypto;
     } else {
-        let obj = require("node:crypto").webcrypto;
-        if (obj) {
-            cryptoLibObject = obj;
+        let obj = tryRequire("node:crypto");
+        if (obj !== undefined) {
+            cryptoLibObject = obj.webcrypto;
         } else {
-            obj = require("crypto").webcrypto;
-            if (obj) {
-                cryptoLibObject = obj;
+            obj = require("crypto");
+            if (obj !== undefined) {
+                cryptoLibObject = obj.webcrypto;
             }
         }
     }
