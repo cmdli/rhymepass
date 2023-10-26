@@ -9,6 +9,17 @@ Rhymepass is a simple Javascript library to build random literary passphrases, i
 ## Usage
 
 ```javascript
+getPassphrase(
+    parts: (PartOfSpeech | ComplexType)[],
+    rhyme?: number[],
+    minimumEntropy?: number):
+    {
+        passphrase: string,
+        entropy: number
+    } | null;
+```
+
+```javascript
 import { getPassphrase, PartOfSpeech, ComplexType } from "rhymepass";
 
 const { passphrase, entropy } = getPassphrase(
